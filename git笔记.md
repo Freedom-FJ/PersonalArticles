@@ -2,13 +2,18 @@
 
 # GIT学习
 ## 全局设置账号邮箱
-1.  
+
+```javascript
 $ git config --global user.name "Your Name"  
 $ git config --global user.email "email@example.com"  
+```
 通过如下命令把这个目录变成Git可以管理的仓库：
+```javascript
 $ git init  
+```
 1.    
 如果我们想知道上次是怎么修改readme.txt 文件的，需要用 git diff 命令  
+```javascript
 $ git diff readme.txt  
 diff --git a/readme.txt b/readme.txt  
 index 46d49bf..9247db6 100644  
@@ -17,9 +22,11 @@ index 46d49bf..9247db6 100644
 @@ -1,2 +1,2 @@  
 -Git is a version control system. //这一句是被删掉的  
 +Git is a distributed version control system. //这一句是新添加的  
-Git is free software.  
-用 git status 查看一下当前仓库状态  
- git log 命令进行查看文件在仓库的版本  
+Git is free software. 
+``` 
+用 `git status` 查看一下当前仓库状态  
+` git log` 命令进行查看文件在仓库的版本 
+```javascript 
 $ git log //查看历史记录  
 commit 1094adb7b9b3807259d8cb349e7df1d4d6477073 (HEAD -> master)  
 Author: Michael Liao <askxuefeng@gmail.com>  
@@ -32,15 +39,18 @@ add distributed
 commit eaadf4e385e865d25c48e7ca9c8395c3f7dfaef0  
 Author: Michael Liao <askxuefeng@gmail.com>  
 Date: Fri May 18 20:59:18 2018 +0800  
+```
 好了，现在如果我们想把 readme.txt 文件退回到上一个版本，就可以使用 git  
 reset 命令：  
+```javascript
 $ git reset *--hard HEAD^  
 //HEAD表示当前版本，则HEAD^表示上一个版本，那么上上版本就是HEAD^^*  
 HEAD is now at e475afc add distributed  
+```
 我们现在想要回到最新的版本，还是使用 git reset 命令：  
-$ git reset *--hard 1094a //这里不能用HEAD而必须使用 commit id  
-，因为最新版本在之前返回时已经被删除了，1094a就是最新版本的 commit    
-id，可以在之前的代码中查到*  
+```javascript
+$ git reset *--hard 1094a //这里不能用HEAD而必须使用 commit id  ，因为最新版本在之前返回时已经被删除了，1094a就是最新版本的 commit id，可以在之前的代码中查到*  
+```
 ## 工作区和暂存区
 工作区（Working Directory）  
 learngit 文件夹就是一个工作区。  
@@ -138,6 +148,7 @@ git stash clear
 清空  
 git栈  
 ## --h Git回滚git reflog  
+```javascript
 $ git reflog
 c4dff881 (HEAD -> feature_zjmj_inefficiencies_0825) HEAD@{0}: pull:
 Fast-forw
@@ -147,12 +158,16 @@ d52718e9 HEAD@{3}: commit: feat: 成效评价中间板块构建
 2858d780 HEAD@{4}: commit: feat: 成效评价中间板块构建
 3e79d360 HEAD@{5}: pull: Fast-forward
 0059e044 HEAD@{6}: pull: Fast-forward
-找到需要回退的版本，执行命令：git reset --hard HEAD@{n}  
-如执行：git reset --hard 61a942c  
+```
+找到需要回退的版本，执行命令：`git reset --hard HEAD@{n} ` 
+如执行：`git reset --hard 61a942c  `
 ## 设置git文件名称大小写敏感  
 git 默认不区分文件名大小写  
 当你创建一个文件后,叫 readme.md 写入内容后 提交到线上代码仓库.  
 然后你在本地修改文件名为 Readme.md 接着你去提交,发现代码没有变化.  
 控制台输入git status 也不显示任何信息  
 那么就配置git 使其对文件名大小写敏感  
+
+```javascript
 git config core.ignorecase false
+```
