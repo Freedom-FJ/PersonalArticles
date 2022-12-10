@@ -30,7 +30,7 @@ export default {
         }
     },
     onLoad () {
-        let height = 0; //定义动态的高度变量 
+        let height = 0; //定义动态的高度变量
         let statusbar = 0; // 动态状态栏高度
         uni.getSystemInfo({ // 获取当前设备的具体信息
             success: (sysinfo) => {
@@ -170,11 +170,11 @@ export default {
 <script type="module" src="/src/main.ts"></script>
 ```
 注意要在**main.ts**之前引入
-这边的webview文件可以点击我下方的链接下载，官方的会有问题，**因为官方的暴露名称也是叫uni这和uniapp自带的全局对象重复名称了，所以会导致无法无法调用webview.js的api的问题**，如果下载了官方的需要自己手动去将webview.js文件内的uni名称改成其他的，我这边改成了**webUni**  
-官网下载链接：  
-[https://gitee.com/dcloud/uni-app/raw/dev/dist/uni.webview.1.5.4.js](https://gitee.com/dcloud/uni-app/raw/dev/dist/uni.webview.1.5.4.js)  
-我的链接：  
-[https://github.com/572031690/vue3-uniapp-template/blob/main/src/static/WebView/uni.webview.js](https://github.com/572031690/vue3-uniapp-template/blob/main/src/static/WebView/uni.webview.js)  
+这边的webview文件可以点击我下方的链接下载，官方的会有问题，**因为官方的暴露名称也是叫uni这和uniapp自带的全局对象重复名称了，所以会导致无法无法调用webview.js的api的问题**，如果下载了官方的需要自己手动去将webview.js文件内的uni名称改成其他的，我这边改成了**webUni**
+官网下载链接：
+[https://gitee.com/dcloud/uni-app/raw/dev/dist/uni.webview.1.5.4.js](https://gitee.com/dcloud/uni-app/raw/dev/dist/uni.webview.1.5.4.js)
+我的链接：
+[https://github.com/572031690/vue3-uniapp-template/blob/main/src/static/WebView/uni.webview.js](https://github.com/572031690/vue3-uniapp-template/blob/main/src/static/WebView/uni.webview.js)
 
 发送消息
 ```javascript
@@ -438,7 +438,7 @@ const detailMessage = (event: { action: string, data: any }) => {
 }
 ```
 # iframe 方案
-使用iframe方案可以有效的避免嵌入网站占满整个屏幕的问题,但是也有弊端就是如果此方案想在H5页面下调试等等会报跨域的问题，直接无法显示子页面
+使用iframe方案可以有效的避免嵌入网站占满整个屏幕的问题,但是也有弊端就是如果此方案想在H5页面下调试等等会报跨域的问题，直接无法显示子页面,不过对方页面如果全部放开跨域的话，使用方法还是和app-h5方案一致的
 ## 手机调试情况（app-plus）
 由于我们手机上无法直接使用window，document方法来通讯以及监听message，所以我们需要借助官方的[render.js](https://uniapp.dcloud.io/tutorial/renderjs.html)方法
 
@@ -551,6 +551,37 @@ methods: {
 发送消息： 调用**window.parent.postMessage**方法
 
 接收消息：**window.addEventListener**监听 message
+## 父亲页面也是H5情况
+### 父亲H5
+发送事件：
+```javascript
+const msg = {
+	data: '12'
+}
+dom.contentWindow.postMessage(msg, '*')
+```
+接收事件：
+```javascript
+window.addEventListener('message', (event) => {
+    console.log(event, '---msg')
+})
+```
+### 子H5
+发送事件：
+```javascript
+const msg = {
+	data: '12'
+}
+window.parent.postMessage(msg, '*');
+```
+接收事件：
+```javascript
+window.addEventListener('message', (event) => {
+    console.log(event, '---msg')
+})
+```
+
+
 
 #  总结
 **webview**
