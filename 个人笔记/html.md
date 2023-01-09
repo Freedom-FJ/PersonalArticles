@@ -266,6 +266,114 @@ th.gutter:last-of-type
         border-radius 6px
         background transparent
 ```
+### el-input
+![在这里插入图片描述](https://img-blog.csdnimg.cn/269c8012d6d04730937632be7e5a995d.png)
+
+```javascript
+el-input( placeholder="请输入内容" v-model="form.browseTimeLength" class="input-with-select" @input="handleEdit($event, 'browseTimeLength')")
+  template(#append)
+      .select-input-box-see
+          el-select( v-model='selectData'  disabled)
+              el-option(label='秒' :value='1')
+              el-option(label='分' :value='2')
+```
+
+```css
+.select-input-box-see {
+    /deep/.el-icon-arrow-up {
+        display none;
+    }
+
+    /deep/.el-select--mini{
+        width: 25px !important
+        margin: -10px -13px
+    }
+    /deep/.el-input {
+        padding: 0 5px
+    }
+    /deep/.el-input-group__append {
+        padding: 0 !important
+    }
+    /deep/.el-input__inner  {
+        background transparent !important
+        color: #606266 !important
+        padding-right: 0px !important
+        margin: 0 auto
+    }
+}
+```
+![在这里插入图片描述](https://img-blog.csdnimg.cn/49778619a5464e23bb9846767ce69ddc.png)
+
+```javascript
+el-input( placeholder="请输入内容" v-model="form.browseTimeLength" class="input-with-select" @input="handleEdit($event, 'browseTimeLength')")
+   template(#append)
+       .select-input-box
+           el-select( v-model='selectData' placeholder="请选择" @change='(val) => (selectData=val)')
+               el-option(label='秒' :value='1')
+               el-option(label='分' :value='2')
+```
+
+```css
+.select-input-box {
+    /deep/.el-select--mini{
+        width: 50px !important
+    }
+    /deep/.el-input {
+        padding: 0 5px
+    }
+    /deep/.el-input__inner {
+        padding-right: 0 !important
+    }
+}
+```
+![在这里插入图片描述](https://img-blog.csdnimg.cn/a81546e3ef5c47c68351fa7582f83c2c.png)
+
+```javascript
+.start-time-box
+	el-select(v-model='form.interceptVideoType' clearable filterable)
+	    el-option( label='上报问题前' :value='1')
+	el-input( placeholder="请输入" v-model="form.evidenceInterceptNumber" @input="handleEdit($event, 'evidenceInterceptNumber')" class="input-with-select")
+	    template(#append)
+	        .select-input-box-see
+	            el-select( v-model='selectData' placeholder="请选择" disabled)
+	                el-option(label='秒' :value='1')
+	                el-option(label='分' :value='2')
+```
+
+```css
+.start-time-box {
+    display flex
+    &>div {
+        margin-right: 5px
+    }
+    /deep/ .el-input__inner {
+        padding-right: 0 !important
+    }
+}
+.select-input-box-see {
+    /deep/.el-icon-arrow-up {
+        display none;
+    }
+
+    /deep/.el-select--mini{
+        width: 25px !important
+        margin: -10px -13px
+    }
+    /deep/.el-input {
+        padding: 0 5px
+    }
+    /deep/.el-input-group__append {
+        padding: 0 !important
+    }
+    /deep/.el-input__inner  {
+        background transparent !important
+        color: #606266 !important
+        padding-right: 0px !important
+        margin: 0 auto
+    }
+}
+```
+
 ## 进度条流程
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/5e6e73c3871e4a9d97553a44c0bf9590.png)
 

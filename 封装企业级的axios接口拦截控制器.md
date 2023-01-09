@@ -1,11 +1,11 @@
 @[TOC](目录)
 # 前言
-对于接口拦截的使用场景我们一般是在一些场景组件切换的时候，内部接口请求以及异步任务并不会被执行队列销毁，而是会继续执行，所以就会导致当你路由或者组件切换的时候一些接口任然被执行。🦐
+对于接口拦截的使用场景我们一般是在一些场景组件切换的时候，虽然组件被销毁，但是往往这个时候内部没有完成的接口请求以及异步任务已经被推入了异步队列，其回调依旧会被代码执行完毕，所以就会导致当你路由或者组件切换的时候一些接口任然被执行。🦐
 
-比如我们在写地图大屏的时候，我们的路由以及组件切换并不会让地图组件切换，也就是地图组件是一直存在的。⛽️如果我们切换到一个页面请求接口会渲染一些点位，但是如果这个时候接口比较慢，我们又很快的切换到了其他页面，这个时候vue组件虽然被销毁，但是里面的异步任务以及被推入了执行队列，所以并不会被销毁，那上一个页面的地图点位就很容易无法被清除而带到了我们当前的页面来，这是一个很棘手的问题，这个时候就需要引入我们的axios的接口拦截功能了🐛。
+比如我们在写地图大屏的时候，我们的路由以及组件切换并不会让地图组件切换，也就是地图组件是一直存在的。⛽️如果我们切换到一个页面请求接口会渲染一些点位，但是如果这个时候接口比较慢，我们又很快的切换到了其他页面，这个时候vue组件虽然被销毁，我们也在beforeDestroy的时候清除了地图点位，但是里面的异步任务已经被推入了执行队列，并不会被销毁，那上一个页面的地图点位就很容易无法被清除而带到了我们当前的页面来，这是一个很棘手的问题，这个时候就需要引入我们的axios的接口拦截功能了🐛。
 # 技术栈
 **axios**，**vue2**，**vue3**，**TS**，**pinia**
-# 1.实现路由切换接口拦截
+# 1.实现路由切换统一接口拦截
 > 技术栈：vue2 JS
 
 💰我们先来实现一个比较简单的接口拦截全局控制方法，也就是在我们路由切换的时候实现全部接口的拦截，因为我们一般的应用场景只是会在路由切换的时候需要用到接口拦截功能。
@@ -24,7 +24,7 @@ const Instance = axios.create({
  */
 Instance.interceptors.request.use(
 	config=> {        
-	const CancelToken = axios.CancelToken
+		const CancelToken = axios.CancelToken
         const source = CancelToken.source()
         config.cancelToken = source.token // 将token注入到请求中
         axiosCancel = source        
@@ -32,11 +32,11 @@ Instance.interceptors.request.use(
 	}
 )
 ```
-我们在接口拦截里面将接口的赋值给了我们```source token```定义的变量```axiosCancel```，这样我们只需要调用```axiosCancel```的```cancel```方法就可以实现接口的拦截
+我们在```axios```的接口请求拦截里面将取消接口token注入到请求中去并赋值给了我们定义的变量```axiosCancel```，这样我们只需要调用```axiosCancel```的```cancel```方法就可以实现接口的拦截
 ```javascript
 axiosCancel.cancel('取消了接口‘)
 ```
-👀这边注意到我们在使用```cancel```的时候还传入了字符串，此字符串也会被我们```axios```的响应拦截所拦截，并会跳入```error```,这样我们就可以通过判断```message```的名称来知道此接口异常的原因是被接口拦截了，那我们一般会封装此情况的接口不会在界面出现错误提示 
+👀这边注意到我们在使用```cancel```的时候还传入了字符串，此字符串也会被我们```axios```的响应拦截所拦截，并会跳入```error```，也就是被```try...carch```捕获,这样我们就可以通过判断```message```的名称来知道此接口异常的原因是被接口拦截了，那我们一般会封装此情况的接口不会在界面出现错误提示 🥺
 
 ```javascript
 /**
@@ -55,7 +55,7 @@ Instance.interceptors.response.use(
 )
 ```
 ## 实现路由切换拦截所有接口
-现在我们😯只需要将这个装有拦截token的变量注入到我们任何想拦截他的地方就可以了，我们可以将它赋值给window对象，也可以赋值给vuex变量都可以。一下以window对象为例🌰
+现在我们😯只需要将这个装有拦截token的变量注入到我们任何想拦截他的地方就可以了，我们可以将它赋值给window对象，也可以赋值给vuex变量都可以。以下以window对象为例🌰
 ```javascript
 Instance.interceptors.request.use(
 	config=> {
@@ -91,14 +91,14 @@ router.beforeEach((to, from, next) => {
 })
 ```
 基本上以上方法可以解决一些简单的接口拦截应用情况，像我们公司的老项目基本上上这个就够了，但是新项目我们可以不止于此。🦕
-此封住还是有很多弊端，比如如果我们在初始化项目的时候马上手动切换路由，就容易导致一些不应该被拦截的接口被拦截，以及拦截的实际比较单一，只能在路由切换的时候，所以我们针对以下两个点进行优化：👬
+此封装还是有很多弊端，比如如果我们在初始化项目的时候马上手动切换路由，就容易导致一些不应该被拦截的接口被拦截，以及拦截的时机比较单一，只能在路由切换的时候，所以我们针对以下两个点进行优化：👬
 >- 自定义拦截接口
 >- 自定义拦截时机
 # 2.最终：实现高度自定义接口拦截功能
 > 技术栈：vue3 TS pinia
 ## 准备拦截接口存储以及方法
 首先我们需要用一个全局的变量来管理我们需要被拦截的接口，并封装一些方法用于控制接口的拦截以及队列清空，所以就需要用到```store```的思想我们就可以引入```pinia（vue2的话可以使用vuex）```
-安装：
+安装：🤔
 ```
 yarn add pinia
 ```
@@ -127,19 +127,17 @@ export const useAxiosStore = defineStore({
     // id: 必须的，在所有 Store 中唯一
     id: 'axios',
     state: () => ({
-        countIntercept: 0, // 存放当前拦截队列里的接口数量
-        interceptArray: [] as Canceler[] // 存放拦截接口
+            interceptArray: [] as Canceler[] // 存放拦截接口
     }),
     // getters
     getters: {
-        countInterceptData: state => state.countIntercept,
+        countInterceptCount: state => state.interceptArray.length,
         interceptArrayData: state => state.interceptArray
     },
     actions: {
     	// 添加接口进入拦截队列
         async addIntercept(cancel: Canceler) {
-            // 可以做异步
-            this.countIntercept++
+            // 可以做异步            
             this.interceptArray.push(cancel)
         },
         // 拦截队列内的接口并删除
@@ -149,14 +147,12 @@ export const useAxiosStore = defineStore({
                 this.interceptArray.slice(-num).forEach((cancel) => {
                     cancel('取消了请求') // 在失败函数中返回这里自定义的错误信息
                 })
-                this.countIntercept = this.countIntercept - num
                 this.interceptArray = this.interceptArray.slice(0, length - num)
                 return
             }
             this.interceptArray.forEach((cancel) => {
                 cancel('取消了请求') // 在失败函数中返回这里自定义的错误信息
             })
-            this.countIntercept = 0
             this.interceptArray = []
         }
     }
@@ -170,7 +166,7 @@ src/service/request.ts
 import axios from 'axios'
 import { useAxiosStore } from '@/store/axios'
 import BaseList from '@/service/baseServe'
-import type { apiObjTs, apiReturnTs } from '@/service/types'
+import type { ApiObjTs, ApiReturnTs } from '@/service/types'
 import Config from '@/config'
 
 /* 实例化请求配置 */
@@ -197,7 +193,7 @@ const instance: AxiosInstance = axios.create({
 
 const request = instance.request
 const CancelToken = axios.CancelToken
-const requestControl = <T, R = false>(option: apiObjTs) => {
+const requestControl = <T, R = false>(option: ApiObjTs) => {
 	// 替换拼接url的服务地址
     if (option.server) option.url = BaseList[option.server] + option.url
     // isIntercept 接口拦截标识代表此接口需要被拦截
@@ -207,24 +203,24 @@ const requestControl = <T, R = false>(option: apiObjTs) => {
             axiosStore.addIntercept(cancel)
         })
     }
-    return request<any, apiReturnTs<T, R>>(option)
+    return request<any, ApiReturnTs<T, R>>(option)
 }
 ```
-这边就不放入axios的响应拦截和请求拦截了，与本文的核心逻辑无关  
+这边就不放入axios的响应拦截和请求拦截了，与本文的核心逻辑无关 ⛽️
 
 src/service/type.ts
 ```javascript
 import type { AxiosRequestConfig } from 'axios'
 import type BaseList from '@/service/baseServe'
 // 入参类型
-export interface apiObjTs extends AxiosRequestConfig {
+export interface ApiObjTs extends AxiosRequestConfig {
     url?: string // 请求地址
     server?: keyof Omit<typeof BaseList, 'prototype'> // 请求服务
     isIntercept?: boolean // 是否推入全局的请求拦截栈
     baseURL?: string // 本地调试时 接口特殊代理
 }
 // 返回值类型
-export type apiReturnTs<T, X> = X extends true ? T : {
+export type ApiReturnTs<T, X> = X extends true ? T : {
     code: number
     data: null | T
     message: string
@@ -236,7 +232,7 @@ src/api/public/index.ts
 import type { ApiObjTs } from '@/service/types'
 import Request from '@/service/request'
 // 示例接口
-export const getSystemMenus = (data: PUBLIC_API_REQUEST.getSystemMenus, option:ApiObjTs={} ) => {
+export const getSystemMenus = (data: PUBLIC_API_REQUEST.getSystemMenus, option:ApiObjTs={}) => {
     return Request<PUBLIC_API_RESPONSE.getSystemMenus>({
         url: '/api/v1.0/permissions/systemMenus',
         server: 'bspPermissionServer',
@@ -268,7 +264,7 @@ declare namespace PUBLIC_API_RESPONSE {
 我们只需要在我们请求的时候第二个参数传入对象属性```isIntercept```为true即可被推入我们的拦截队列了
 ```javascript
 import { getSystemMenus } from '@/api/public' // 单个请求导入
-const res = await publicApi.getSystemMenus({ systemCode }, { isIntercept: true }) 
+const res = await getSystemMenus({ systemCode }, { isIntercept: true }) 
 ```
 我们在任何想用的时候只需要引入```pinia```的```axiosStore```调用相应的方法就可以了👴
 ```javascript
