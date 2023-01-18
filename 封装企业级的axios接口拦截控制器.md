@@ -90,8 +90,22 @@ router.beforeEach((to, from, next) => {
     }
 })
 ```
-基本上以上方法可以解决一些简单的接口拦截应用情况，像我们公司的老项目基本上上这个就够了，但是新项目我们可以不止于此。🦕
-此封装还是有很多弊端，比如如果我们在初始化项目的时候马上手动切换路由，就容易导致一些不应该被拦截的接口被拦截，以及拦截的时机比较单一，只能在路由切换的时候，所以我们针对以下两个点进行优化：👬
+当然为了避免路由切换将一些比较重要的基础信息接口也给拦截了我们可以加入白名单功能，如果我们的sever是比较规范的类似于```wgms-base-server```有一定的命名规律我们可以直接用正则提取比较，不然的画只能遍历白名单依次比较了,前者相较于后者计算复杂度会低一些
+
+```javascript
+const whiteInterceptServer = ['simple-user-center-server', 'bsp-permission-server']
+// if (!whiteInterceptServer.includes(config.url.match(/[\w-]*(?=-server)/)?.[0] + '-server')) {
+if (!whiteInterceptServer.some(url => config.url.includes(url))) {
+    !window.axiosCancel && (window.axiosCancel = [])
+    const CancelToken = axios.CancelToken
+    const source = CancelToken.source()
+    config.cancelToken = source.token // 将token注入到请求中
+    window.axiosCancel.push(source)
+}
+```
+
+基本上以上方法可以解决一些简单的接口拦截应用情况，像我们公司的老项目基本上上这个就够了，此方式对于一些老项目的升级是再好不过的了，基本不会影响到之前代码的逻辑，且开发者对接口拦截无需感知，不用介入内部逻辑，但是新项目我们可以不止于此。🦕
+此封装还是有很多弊端，比如我们在手动切换路由的时候，不够灵活，还是容易拦截一些不必要的接口，以及拦截的时机比较单一，只能在路由切换的时候，所以我们针对以下两个点进行优化：👬
 >- 自定义拦截接口
 >- 自定义拦截时机
 # 2.最终：实现高度自定义接口拦截功能
@@ -273,3 +287,4 @@ const axiosStore = useAxiosStore()
 axiosStore.clearIntercept(1) // 拦截最新一条请求，并删除
 axiosStore.clearIntercept() // 拦截全部并清空拦截队列
 ```
+以上就基本完成了接口拦截功能的封装，非常强的灵活性，可以在任意时刻拦截任意需要拦截的接口，但是弊端是拦截功能不是托管的，需要开发人员了解使用方法，大家可以根据需求自行修改使用。
